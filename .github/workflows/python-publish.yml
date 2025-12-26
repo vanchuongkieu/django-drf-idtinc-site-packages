@@ -24,34 +24,26 @@ jobs:
           python-version: "3.x"
 
       - name: Extract version from tag
-        id: version
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Update pyproject.toml version
+      - name: Update version in pyproject.toml
         run: |
-          python - <<EOF
-          import tomllib, tomli_w, pathlib
-
-          path = pathlib.Path("pyproject.toml")
-          data = tomllib.loads(path.read_text())
-          data["project"]["version"] = "${{ steps.version.outputs.version }}"
-          path.write_text(tomli_w.dumps(data))
-          EOF
+          sed -i 's/^version = ".*"/version = "'"$VERSION"'"/' pyproject.toml
 
       - name: Commit version bump
         run: |
           git config user.name "Kiều Văn Chương"
           git config user.email "vanchuongkieu@gmail.com"
-          git commit -am "chore: bump version ${{ steps.version.outputs.version }}"
+          git commit -am "chore: bump version $VERSION" || echo "No changes to commit"
           git push
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: Release ${{ steps.version.outputs.version }}
+          name: Release ${{ env.VERSION }}
           generate_release_notes: true
 
       - name: Install build tools
