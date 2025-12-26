@@ -1,24 +1,58 @@
-name: Upload Idtinc Package
+name: Release & Publish Idtinc
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build-and-publish:
+  release-and-publish:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update pyproject.toml version
+        run: |
+          python - <<EOF
+          import tomllib, tomli_w, pathlib
+
+          path = pathlib.Path("pyproject.toml")
+          data = tomllib.loads(path.read_text())
+          data["project"]["version"] = "${{ steps.version.outputs.version }}"
+          path.write_text(tomli_w.dumps(data))
+          EOF
+
+      - name: Commit version bump
+        run: |
+          git config user.name "Kiều Văn Chương"
+          git config user.email "vanchuongkieu@gmail.com"
+          git commit -am "chore: bump version ${{ steps.version.outputs.version }}"
+          git push
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.version.outputs.version }}
+          generate_release_notes: true
 
       - name: Install build tools
         run: |
@@ -35,3 +69,4 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: dist/
+          skip-existing: true
