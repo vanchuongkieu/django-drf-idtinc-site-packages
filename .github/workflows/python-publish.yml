@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -27,17 +25,6 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Update version in pyproject.toml
-        run: |
-          sed -i 's/^version = ".*"/version = "'"$VERSION"'"/' pyproject.toml
-
-      - name: Commit version bump
-        run: |
-          git config user.name "Kiều Văn Chương"
-          git config user.email "vanchuongkieu@gmail.com"
-          git commit -am "chore: bump version $VERSION" || echo "No changes to commit"
-          git push
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
