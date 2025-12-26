@@ -1,0 +1,14 @@
+{
+    "python.formatting.provider": "black",
+    "python.sortImports.args": ["--profile", "black"],
+    "editor.formatOnSave": false,
+    "editor.lineHeight": 24,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "always"
+    },
+    "editor.formatOnPaste": false,
+    "python.analysis.extraPaths": [
+        "../**/*",
+    ],
+    "python.analysis.autoSearchPaths": true,
+}
