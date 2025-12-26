@@ -57,11 +57,11 @@ INSTALLED_APPS = [
 
 ```py
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     # ...
     "django_currentuser.middleware.ThreadLocalUserMiddleware",
     "idtinc.integration.middleware.CustomLocaleMiddleware",
     "idtinc.integration.middleware.ExceptionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 ```
 
@@ -87,6 +87,14 @@ FIREBASE_AUTHENTICATION = {
 ```
 
 When `idtinc.firebase` AppConfig becomes ready it will call the helper that initializes the Firebase app.
+
+4. Setup logging
+
+```py
+from idtinc.integration.logging import get_setup_logging
+
+LOGGING = get_setup_logging()
+```
 
 ## Usage examples
 
@@ -134,6 +142,76 @@ The integration AppConfig will warn about missing apps/middleware but does not m
 ## Storage backends
 
 The library uses Django's `default_storage` for generating storage URLs so you can plug in MinIO, Backblaze, or any Django storage backend. Example storage backends are provided under `src/idtinc/storage`.
+
+1. MinIO Storage
+```
+Django Storage backend for MinIO.
+
+Reads configuration from Django settings when not provided explicitly:
+- STORAGE_MINIO_ENDPOINT
+- STORAGE_MINIO_ACCESS_KEY
+- STORAGE_MINIO_SECRET_KEY
+- STORAGE_MINIO_SECURE
+- STORAGE_MINIO_BUCKET_NAME
+
+# For Django 4.2+
+STORAGES = {
+    "default": {
+        "BACKEND": "django_library.core.files.storage.MinioStorage",
+    },
+}
+
+# Or with options
+STORAGES = {
+    "default": {
+        "BACKEND": "django_library.core.files.storage.MinioStorage",
+        "OPTIONS": {
+            "bucket_name": "",
+            "endpoint": "", # s3.example.com
+            "access_key": "",
+            "secret_key": "",
+            "secure": True,  # True or False
+        },
+    },
+}
+
+# For Django versions below 4.2
+DEFAULT_FILE_STORAGE = "django_library.core.files.storage.MinioStorage"
+```
+
+2. Backblaze B2 Storage
+```
+# Django Storage backend for Backblaze B2.
+
+Reads configuration from Django settings when not provided explicitly:
+STORAGE_BACKBLAZE_APP_KEY
+STORAGE_BACKBLAZE_ACCOUNT_ID
+STORAGE_BACKBLAZE_BUCKET_NAME
+STORAGE_BACKBLAZE_BUCKET_ID
+
+# For Django 4.2+
+STORAGES = {
+    "default": {
+        "BACKEND": "django_library.core.files.storage.BackblazeStorage",
+    },
+}
+
+# Or with options
+STORAGES = {
+    "default": {
+        "BACKEND": "django_library.core.files.storage.BackblazeStorage",
+        "OPTIONS": {
+            "app_key": "",
+            "account_id": "",
+            "bucket_name": "",
+            "bucket_id": "",
+        },
+    },
+}
+
+# For Django versions below 4.2
+DEFAULT_FILE_STORAGE = "django_library.core.files.storage.BackblazeStorage"
+```
 
 ## Development
 
